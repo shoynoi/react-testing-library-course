@@ -1,5 +1,6 @@
 import * as React from 'react'
 import {render, screen, waitFor} from '@testing-library/react'
+import {build, fake, sequence} from 'test-data-bot'
 import userEvent from '@testing-library/user-event'
 import {Redirect as MockRedirect} from 'react-router'
 import {Editor} from '../_post-editor-01-markup'
@@ -12,21 +13,25 @@ jest.mock('react-router', () => {
   }
 })
 
-afterAll(() => {
+afterEach(() => {
   jest.clearAllMocks()
+})
+
+const postBuilder = build('Post').fields({
+  title: fake((f) => f.lorem.words()),
+  content: fake((f) => f.lorem.paragraph()),
+  tags: fake((f) => [f.lorem.word(), f.lorem.word(), f.lorem.word()]),
+})
+
+const userBuilder = build('User').fields({
+  id: sequence((s) => `user-${s}`),
 })
 
 test('renders a form with title, content, tags, and a submit button', async () => {
   mockSavePost.mockResolvedValueOnce()
-  const fakeUser = {
-    id: 'user-id',
-  }
+  const fakeUser = userBuilder()
   render(<Editor user={fakeUser} />)
-  const fakePost = {
-    title: 'Test title',
-    content: 'Test content',
-    tags: ['tag1', 'tag2'],
-  }
+  const fakePost = postBuilder()
   const preDate = new Date().getTime()
 
   userEvent.type(screen.getByLabelText(/title/i), fakePost.title)
