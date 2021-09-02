@@ -1,7 +1,9 @@
 import * as React from 'react'
+import {Redirect} from 'react-router'
 import {savePost} from './api'
 
 function Editor({user}) {
+  const [redirect, setRedirect] = React.useState(false)
   const [isSaving, setIsSaving] = React.useState(false)
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -13,8 +15,13 @@ function Editor({user}) {
       tags: tags.value.split(',').map((tag) => tag.trim()),
       authorId: user.id,
     }
-    return savePost(newPost)
+    return savePost(newPost).then(() => setRedirect(true))
   }
+
+  if (redirect) {
+    return <Redirect to="/" />
+  }
+
   return (
     <form onSubmit={handleSubmit}>
       <label htmlFor="input-title">Title</label>
