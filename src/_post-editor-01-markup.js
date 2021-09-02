@@ -5,6 +5,7 @@ import {savePost} from './api'
 function Editor({user}) {
   const [redirect, setRedirect] = React.useState(false)
   const [isSaving, setIsSaving] = React.useState(false)
+  const [error, setError] = React.useState(null)
   const handleSubmit = (e) => {
     e.preventDefault()
     setIsSaving(true)
@@ -16,7 +17,13 @@ function Editor({user}) {
       date: new Date().toISOString(),
       authorId: user.id,
     }
-    return savePost(newPost).then(() => setRedirect(true))
+    return savePost(newPost).then(
+      () => setRedirect(true),
+      (response) => {
+        setError(response.data.error)
+        setIsSaving(false)
+      },
+    )
   }
 
   if (redirect) {
@@ -37,6 +44,7 @@ function Editor({user}) {
       <button type="submit" disabled={isSaving}>
         Submit
       </button>
+      {error ? <div role="alert">{error}</div> : null}
     </form>
   )
 }
