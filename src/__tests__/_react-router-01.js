@@ -15,3 +15,13 @@ test('main renders about and home and I can navigate to those pages', () => {
   userEvent.click(screen.getByText(/about/i))
   expect(screen.getByRole('heading')).toHaveTextContent(/about/i)
 })
+
+test('landing on a bad page shows no match component', () => {
+  window.history.pushState({}, 'Test page', '/something-that-does-not-match')
+  render(
+    <BrowserRouter>
+      <Main />
+    </BrowserRouter>,
+  )
+  expect(screen.getByRole('heading')).toHaveTextContent(/404/i)
+})
