@@ -17,16 +17,18 @@ afterAll(() => {
 })
 
 test('renders a form with title, content, tags, and a submit button', async () => {
+  mockSavePost.mockResolvedValueOnce()
   const fakeUser = {
     id: 'user-id',
   }
+  render(<Editor user={fakeUser} />)
   const fakePost = {
     title: 'Test title',
     content: 'Test content',
     tags: ['tag1', 'tag2'],
   }
-  mockSavePost.mockResolvedValueOnce()
-  render(<Editor user={fakeUser} />)
+  const preDate = new Date().getTime()
+
   userEvent.type(screen.getByLabelText(/title/i), fakePost.title)
   userEvent.type(screen.getByLabelText(/content/i), fakePost.content)
   userEvent.type(screen.getByLabelText(/tags/i), fakePost.tags.join(', '))
@@ -36,9 +38,15 @@ test('renders a form with title, content, tags, and a submit button', async () =
   expect(submitButton).toBeDisabled()
   expect(mockSavePost).toHaveBeenCalledWith({
     ...fakePost,
+    date: expect.any(String),
     authorId: fakeUser.id,
   })
   expect(mockSavePost).toHaveBeenCalledTimes(1)
+
+  const postDate = new Date().getTime()
+  const date = new Date(mockSavePost.mock.calls[0][0].date).getTime()
+  expect(date).toBeGreaterThanOrEqual(preDate)
+  expect(date).toBeLessThanOrEqual(postDate)
 
   await waitFor(() => expect(MockRedirect).toHaveBeenCalledWith({to: '/'}, {}))
 })
