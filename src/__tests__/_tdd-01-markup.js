@@ -27,17 +27,27 @@ const userBuilder = build('User').fields({
   id: sequence((s) => `user-${s}`),
 })
 
-test('renders a form with title, content, tags, and a submit button', async () => {
-  mockSavePost.mockResolvedValueOnce()
+const renderEditor = () => {
   const fakeUser = userBuilder()
   render(<Editor user={fakeUser} />)
   const fakePost = postBuilder()
-  const preDate = new Date().getTime()
-
   userEvent.type(screen.getByLabelText(/title/i), fakePost.title)
   userEvent.type(screen.getByLabelText(/content/i), fakePost.content)
   userEvent.type(screen.getByLabelText(/tags/i), fakePost.tags.join(', '))
   const submitButton = screen.getByRole('button', {name: /submit/i})
+  return {
+    fakeUser,
+    fakePost,
+    submitButton,
+  }
+}
+
+test('renders a form with title, content, tags, and a submit button', async () => {
+  mockSavePost.mockResolvedValueOnce()
+  const {fakeUser, fakePost, submitButton} = renderEditor()
+
+  const preDate = new Date().getTime()
+
   expect(submitButton).toBeInTheDocument()
   userEvent.click(submitButton)
   expect(submitButton).toBeDisabled()
@@ -59,10 +69,8 @@ test('renders a form with title, content, tags, and a submit button', async () =
 test('renders a error message from the server', async () => {
   const testError = 'test error'
   mockSavePost.mockRejectedValueOnce({data: {error: testError}})
-  const fakeUser = userBuilder()
-  render(<Editor user={fakeUser} />)
+  const {submitButton} = renderEditor()
 
-  const submitButton = screen.getByRole('button', {name: /submit/i})
   userEvent.click(submitButton)
   expect(await screen.findByRole('alert')).toHaveTextContent(testError)
   expect(submitButton).toBeEnabled()
